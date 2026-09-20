@@ -16,7 +16,7 @@ docker run --rm -it \
     --security-opt no-new-privileges:true \
     --shm-size $SHM_SIZE \
     --tmpfs "/tmp:rw,noexec,nosuid,size=$TMPFS_SIZE" \
-    -v "$HOME/.{TARGET}:/home/agent/.${TARGET}" \
+    -v "$HOME/.${TARGET}:/home/agent/.${TARGET}" \
     -v "$PWD/agents/${TARGET}/.local:/home/agent/.local" \
     -v "$PWD/agents/${TARGET}/share/rw:/home/agent/share/rw" \
     -v "$PWD/agents/${TARGET}/share/ro:/home/agent/share/ro:ro" \
