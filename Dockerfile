@@ -34,3 +34,15 @@ WORKDIR $HOME
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+
+FROM base AS grok
+
+RUN set -eux; \
+      \
+      curl -fsSL https://x.ai/cli/install.sh | bash; \
+      install -m 0755 $HOME/.grok/bin/grok /usr/local/bin/grok; \
+      grok --version;
+
+USER ${AGENT_USER}
+CMD ["grok"]
