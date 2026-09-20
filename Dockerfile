@@ -1,10 +1,6 @@
 FROM ubuntu:24.04 AS base
 
-ARG AGENT_UID=1000
-ARG AGENT_GID=1000
-ARG AGENT_USER=agent
-
-# Install some useful tools and set up the agent user
+# Install some useful tools
 RUN set -eux; \
       \
       apt-get update; \
@@ -14,7 +10,14 @@ RUN set -eux; \
         jq ripgrep fd-find zip unzip tar \
       ;\
       ln -s /usr/bin/fdfind /usr/local/bin/fd; \
-      rm -rf /var/lib/apt/lists/*; \
+      rm -rf /var/lib/apt/lists/*;
+
+ARG AGENT_USER=agent
+ARG AGENT_UID=1000
+ARG AGENT_GID=1000
+
+# Set up the agent user
+RUN set -eux; \
       \
       userdel -r ubuntu; \
       groupadd --gid ${AGENT_GID} ${AGENT_USER}; \
