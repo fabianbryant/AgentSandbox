@@ -1,4 +1,12 @@
+ARG AGENT_USER=agent
+ARG AGENT_UID=1000
+ARG AGENT_GID=1000
+
 FROM ubuntu:24.04 AS base
+
+ARG AGENT_USER
+ARG AGENT_UID
+ARG AGENT_GID
 
 # Install some useful tools
 RUN set -eux; \
@@ -11,10 +19,6 @@ RUN set -eux; \
       ;\
       ln -s /usr/bin/fdfind /usr/local/bin/fd; \
       rm -rf /var/lib/apt/lists/*;
-
-ARG AGENT_USER=agent
-ARG AGENT_UID=1000
-ARG AGENT_GID=1000
 
 # Set up the agent user
 RUN set -eux; \
@@ -37,6 +41,8 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 
 FROM base AS grok
+
+ARG AGENT_USER
 
 RUN set -eux; \
       \
