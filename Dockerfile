@@ -40,6 +40,20 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 
+FROM base AS claude
+
+ARG AGENT_USER
+
+RUN set -eux; \
+      \
+      curl -fsSL https://claude.ai/install.sh | bash; \
+      install -m 0755 $HOME/.local/bin/claude /usr/local/bin/claude; \
+      claude --version;
+
+USER ${AGENT_USER}
+CMD ["claude"]
+
+
 FROM base AS grok
 
 ARG AGENT_USER
