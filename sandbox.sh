@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage () {
-    echo "(* TODO *)"
+    echo '(* TODO *)'
     exit 0
 }
 
@@ -115,8 +115,8 @@ while [[ $# -gt 0 ]]; do
             break
             ;;
         -*)
-            echo "Unknown option: $1" >&2
-            usage
+            echo "Invalid option: $1" >&2
+            echo "Run '$0 --help' for valid options." >&2
             exit 1
             ;;
         *)
