@@ -28,6 +28,10 @@ while [[ $# -gt 0 ]]; do
             DO_RUN='true'
             shift 1
             ;;
+        --debug)
+            DEBUG_MODE='true'
+            shift 1
+            ;;
 
         -a|--agent)
             AGENT="$2"
@@ -125,6 +129,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+DEBUG_MODE=${DEBUG_MODE:-'false'}
+
+if [[ $DEBUG_MODE == 'true' ]]; then
+    set -x
+fi
+
 DO_RUN=${DO_RUN:='false'}
 DO_BUILD=${DO_BUILD:='false'}
 USE_CACHE=${USE_CACHE:='false'}
@@ -140,12 +150,10 @@ if [[ $DO_BUILD == 'true' ]]; then
     else
         docker build --no-cache --target=$AGENT -t=$IMAGE_NAME .
     fi
-else
-    echo 'Skipping build. Specify --build to compile the image.' >&2
 fi
 
 if [[ $DO_RUN == 'false' ]]; then
-    echo 'Skipping execution. Specify --run to launch a container.' >&2
+    echo 'Skipping execution. Specify --run to launch a sandbox container.' >&2
     exit 0
 fi
 
