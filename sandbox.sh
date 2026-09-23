@@ -34,7 +34,7 @@ while [[ $# -gt 0 ]]; do
             usage
             ;;
 
-        --list-agents)
+        -l|--list-agents)
             list_agents
             ;;
 
@@ -100,39 +100,39 @@ while [[ $# -gt 0 ]]; do
             shift 1
             ;;
 
-        -H|--agent-home-dir)
-            AGENT_HOME_DIR="$2"
+        -H|--agent-home-mnt)
+            AH_MOUNT_DIR="$2"
             shift 2
             ;;
-        --agent-home-dir=*)
-            AGENT_HOME_DIR="${1#*=}"
+        --agent-home-mnt=*)
+            AH_MOUNT_DIR="${1#*=}"
             shift 1
             ;;
 
-        -l|--agent-local-dir)
-            AGENT_LOCAL_DIR="$2"
+        -L|--dot-local-mnt)
+            DL_MOUNT_DIR="$2"
             shift 2
             ;;
-        --agent-local-dir=*)
-            AGENT_LOCAL_DIR="${1#*=}"
+        --dot-local-mnt=*)
+            DL_MOUNT_DIR="${1#*=}"
             shift 1
             ;;
 
-        -r|--ro-dir)
-            READ_ONLY_DIR="$2"
+        -R|--ro-mnt)
+            RO_MOUNT_DIR="$2"
             shift 2
             ;;
-        --ro-dir=*)
-            READ_ONLY_DIR="${1$*=}"
+        --ro-mnt=*)
+            RO_MOUNT_DIR="${1$*=}"
             shift 1
             ;;
 
-        -w|--rw-dir)
-            READ_WRITE_DIR="$2"
+        -W|--rw-mnt)
+            RW_MOUNT_DIR="$2"
             shift 2
             ;;
-        --rw-dir=*)
-            READ_WRITE_DIR="$1{#*=}"
+        --rw-mnt=*)
+            RW_MOUNT_DIR="$1{#*=}"
             shift 1
             ;;
 
@@ -186,24 +186,24 @@ if [[ $DO_RUN == 'false' ]]; then
 fi
 
 AGENTS_DIR=${AGENTS_DIR:="$PWD/agents"}
-AGENT_HOME_DIR=${AGENT_HOME_DIR:="$HOME/.${AGENT}"}
-AGENT_LOCAL_DIR=${AGENT_LOCAL_DIR:="${AGENTS_DIR}/${AGENT}/.local"}
-READ_ONLY_DIR=${READ_ONLY_DIR:="${AGENTS_DIR}/${AGENT}/share/ro"}
-READ_WRITE_DIR=${READ_WRITE_DIR:="${AGENTS_DIR}/${AGENT}/share/rw"}
+AH_MOUNT_DIR=${AH_MOUNT_DIR:="$HOME/.${AGENT}"}
+DL_MOUNT_DIR=${DL_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/.local"}
+RO_MOUNT_DIR=${RO_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/share/ro"}
+RW_MOUNT_DIR=${RW_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/share/rw"}
 
-mkdir -p "${AGENT_HOME_DIR}" \
-    "${AGENT_LOCAL_DIR}" \
-    "${READ_ONLY_DIR}" \
-    "${READ_WRITE_DIR}"
+mkdir -p "${AH_MOUNT_DIR}" \
+    "${DL_MOUNT_DIR}" \
+    "${RO_MOUNT_DIR}" \
+    "${RW_MOUNT_DIR}"
 
 exec docker run --rm -it \
     --cap-drop ALL \
     --security-opt no-new-privileges:true \
     --shm-size "$SHM_SIZE" \
     --tmpfs "/tmp:rw,noexec,nosuid,size=$TMPFS_SIZE" \
-    -v "${AGENT_HOME_DIR}:/home/agent/.${AGENT}" \
-    -v "${AGENT_LOCAL_DIR}:/home/agent/.local" \
-    -v "${READ_WRITE_DIR}:/home/agent/share/rw" \
-    -v "${READ_ONLY_DIR}:/home/agent/share/ro:ro" \
+    -v "${AH_MOUNT_DIR}:/home/agent/.${AGENT}" \
+    -v "${DL_MOUNT_DIR}:/home/agent/.local" \
+    -v "${RW_MOUNT_DIR}:/home/agent/share/rw" \
+    -v "${RO_MOUNT_DIR}:/home/agent/share/ro:ro" \
     "$IMAGE_NAME" \
     "$@"
