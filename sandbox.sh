@@ -25,7 +25,9 @@ agent_supported() {
 }
 
 # TODO: Add env var passthrough
-# TODO: Use Docker Compose
+# TODO: Add/evaluate network restriction (block all + whitelist)
+# TODO: Add configurable mem/cpu/pids
+# TODO: Move to using Docker Compose
 # TODO: Create Kubernetes/Minikube manifest
 
 while [[ $# -gt 0 ]]; do
@@ -39,7 +41,7 @@ while [[ $# -gt 0 ]]; do
             ;;
 
         --build)
-            DO_BUILD='true'
+            BUILD='true'
             shift 1
             ;;
         --cache)
@@ -47,11 +49,11 @@ while [[ $# -gt 0 ]]; do
             shift 1
             ;;
         --run)
-            DO_RUN='true'
+            RUN='true'
             shift 1
             ;;
         --debug)
-            DEBUG_MODE='true'
+            DEBUG='true'
             shift 1
             ;;
 
@@ -123,7 +125,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --ro-mnt=*)
-            RO_MOUNT_DIR="${1$*=}"
+            RO_MOUNT_DIR="${1#*=}"
             shift 1
             ;;
 
@@ -132,7 +134,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --rw-mnt=*)
-            RW_MOUNT_DIR="$1{#*=}"
+            RW_MOUNT_DIR="${1#*=}"
             shift 1
             ;;
 
@@ -151,14 +153,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-DEBUG_MODE=${DEBUG_MODE:-'false'}
+DEBUG=${DEBUG:-'false'}
 
-if [[ $DEBUG_MODE == 'true' ]]; then
+if [[ $DEBUG == 'true' ]]; then
     set -x
 fi
 
-DO_RUN=${DO_RUN:='false'}
-DO_BUILD=${DO_BUILD:='false'}
+RUN=${RUN:='false'}
+BUILD=${BUILD:='false'}
 USE_CACHE=${USE_CACHE:='false'}
 
 AGENT=${AGENT:='grok'}
@@ -172,7 +174,7 @@ if [[ $supported == 'false' ]]; then
     exit 1
 fi
 
-if [[ $DO_BUILD == 'true' ]]; then
+if [[ $BUILD == 'true' ]]; then
     if [[ $USE_CACHE == 'true' ]]; then
         docker build --target=$AGENT -t=$IMAGE_NAME .
     else
@@ -180,7 +182,7 @@ if [[ $DO_BUILD == 'true' ]]; then
     fi
 fi
 
-if [[ $DO_RUN == 'false' ]]; then
+if [[ $RUN == 'false' ]]; then
     echo 'Skipping execution. Specify --run to launch a sandbox container.' >&2
     exit 0
 fi
