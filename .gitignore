@@ -4,5 +4,4 @@
 !README.md
 !Dockerfile
 !entrypoint.sh
-!build.sh
-!run.sh
+!sandbox.sh
