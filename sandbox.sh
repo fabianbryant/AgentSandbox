@@ -154,7 +154,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 DEBUG=${DEBUG:-'false'}
-
 if [[ $DEBUG == 'true' ]]; then
     set -x
 fi
