@@ -6,6 +6,24 @@ usage () {
     exit 0
 }
 
+SUPPORTED_AGENTS=('claude' 'grok')
+
+list_agents() {
+    echo "${SUPPORTED_AGENTS[@]}"
+    exit 0
+}
+
+agent_supported() {
+    supported='false'
+    for agent in "${SUPPORTED_AGENTS[@]}"; do
+        if [[ $agent == $1 ]]; then
+            supported='true'
+            break
+        fi
+    done
+    echo $supported
+}
+
 # TODO: Add env var passthrough
 # TODO: Use Docker Compose
 # TODO: Create Kubernetes/Minikube manifest
@@ -14,6 +32,10 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)
             usage
+            ;;
+
+        --list-agents)
+            list_agents
             ;;
 
         --build)
@@ -143,6 +165,12 @@ AGENT=${AGENT:='grok'}
 IMAGE_NAME=${IMAGE_NAME:=$AGENT-sandbox}
 SHM_SIZE=${SHM_SIZE:='1g'}
 TMPFS_SIZE=${TMPFS_SIZE:='256m'}
+
+supported=$(agent_supported $AGENT)
+if [[ $supported == 'false' ]]; then
+    echo "Unsupported agent: $AGENT" >&2
+    exit 1
+fi
 
 if [[ $DO_BUILD == 'true' ]]; then
     if [[ $USE_CACHE == 'true' ]]; then
