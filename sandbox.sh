@@ -26,7 +26,7 @@ agent_supported() {
     echo "$supported"
 }
 
-# TODO: Add env var passthrough
+ENV_ARGS=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -142,6 +142,15 @@ while [[ $# -gt 0 ]]; do
             ;;
         --tmpfs-size=*)
             TMPFS_SIZE="${1#*=}"
+            shift 1
+            ;;
+
+        -e|--env)
+            ENV_ARGS+=("$2")
+            shift 2
+            ;;
+        --env=*)
+            ENV_ARGS+=("${1#--env=}")
             shift 1
             ;;
 
@@ -292,5 +301,9 @@ if [[ $AGENT != 'base' ]]; then
         -v "${RO_MOUNT_DIR}:/home/${AGENT_USER}/ro:ro"
     )
 fi
+
+for env_arg in "${ENV_ARGS[@]+"${ENV_ARGS[@]}"}"; do
+    run_flags+=(-e "$env_arg")
+done
 
 exec docker run "${run_flags[@]}" "$IMAGE_NAME" "$@"
