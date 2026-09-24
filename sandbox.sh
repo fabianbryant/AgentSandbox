@@ -2,7 +2,122 @@
 set -euo pipefail
 
 usage() {
-    echo '(* TODO *)'
+    cat <<EOF
+Usage: sandbox.sh [options] [--] [command ...]
+
+Build and/or run a sandbox container from the Dockerfile in the current
+directory. The default agent is grok. Nothing is built or run unless you
+pass --build and/or --run. Arguments after the options replace the image
+command (the grok or claude binary, or bash on the base stage).
+
+  -h, --help
+      Show this help and exit.
+
+  -l, --list-agents
+      Print the supported agent names and exit.
+
+  --build
+      Build the image. Default: do not build.
+      The build target is the agent name. The tag is --image.
+
+  --cache
+      Use the Docker build cache. Default: pass --no-cache.
+
+  --run
+      Run the container. Default: do not run. Without --run the script
+      exits after an optional build.
+
+  --debug
+      Trace this script with set -x. Default: off. This does not change
+      the container.
+
+  -a, --agent NAME
+      Stage to build and run: base, claude, or grok. Default: grok.
+      base does not mount the host directories below.
+
+  -i, --image NAME
+      Image tag to build and run. Default: <agent>-sandbox.
+
+  -U, --agent-user NAME
+      User name baked into the image at build, and the home directory
+      used in the mount targets at run. Default: agent.
+
+  -u, --uid UID
+      Numeric uid passed to the build. Default: 1000.
+      Used only with --build. A later --run uses the user already in
+      the image.
+
+  -g, --gid GID
+      Numeric gid passed to the build. Default: 1000.
+      Used only with --build.
+
+  -c, --cpus N
+      CPU limit, forwarded as docker run --cpus. Default: omit the flag.
+
+  -m, --memory SIZE
+      RAM limit. When set, --memory-swap is set to the same size, so the
+      container has no swap allowance beyond that RAM. Default: omit both
+      flags (unlimited).
+
+  -p, --pids-limit N
+      Maximum number of tasks in the container. Threads count.
+      Default: omit the flag. Pass -1 for Docker's explicit unlimited.
+
+  -s, --shm-size SIZE
+      Cap on /dev/shm. Default: 1g.
+      This is a filesystem cap. Bytes written there count against
+      --memory as they are used. This script does not compare the two.
+
+  -t, --tmpfs-size SIZE
+      Cap on the /tmp tmpfs (rw,noexec,nosuid). Default: 256m.
+      Same charging rule as --shm-size.
+
+  -e, --env SPEC
+      Forwarded to docker run -e. Repeatable.
+      SPEC is either KEY (copy from this shell) or KEY=VALUE (set a
+      literal). VALUE may contain '='.
+
+  -d, --agents-dir PATH
+      Parent of the per-agent .local and share directories.
+      Default: $PWD/agents. Created on --run when the agent is not base.
+
+  -A, --dot-agent-mnt PATH
+      Host directory mounted at /home/<user>/.<agent>.
+      Default: $HOME/.<agent>. This is the live login and session store
+      (for grok, ~/.grok).
+
+  -L, --dot-local-mnt PATH
+      Host directory mounted at /home/<user>/.local.
+      Default: <agents-dir>/<agent>/.local.
+      This is a sandbox toolchain cache, not your real ~/.local.
+
+  -R, --ro-mnt PATH
+      Host directory mounted read-only at /home/<user>/ro.
+      Default: <agents-dir>/<agent>/share/ro.
+
+  -W, --rw-mnt PATH
+      Host directory mounted read-write at /home/<user>/rw.
+      Default: <agents-dir>/<agent>/share/rw.
+
+  --
+      End of options. Remaining arguments are the container command.
+      A command that does not start with '-' does not need the '--'.
+
+The same uppercase names can be set in the environment (AGENT, IMAGE_NAME,
+SHM_SIZE, and the rest). A flag wins. If the variable is unset or empty,
+the default above applies. CPUS, MEMORY, and PIDS_LIMIT have no default;
+leave them unset to omit the docker flag.
+
+Examples:
+  sandbox.sh --build --run
+  sandbox.sh --run
+  sandbox.sh --run printenv
+  sandbox.sh --run -e API_KEY
+  sandbox.sh --run -e API_KEY=literal
+  sandbox.sh --build --cache --agent claude --run
+  sandbox.sh --build --run --agent base
+  sandbox.sh --run --memory 4g --cpus 2 --pids-limit 512
+EOF
     exit 0
 }
 
