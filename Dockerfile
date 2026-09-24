@@ -2,6 +2,8 @@ ARG AGENT_USER=agent
 ARG AGENT_UID=1000
 ARG AGENT_GID=1000
 
+
+# Base image
 FROM ubuntu:24.04 AS base
 
 ARG AGENT_USER
@@ -32,37 +34,45 @@ RUN set -eux; \
         ${AGENT_USER} \
       ;
 
-ENV HOME=/home/agent
+ENV HOME=/home/${AGENT_USER}
 WORKDIR $HOME
 
+# Set entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
+USER ${AGENT_USER}
+CMD ["/bin/bash"]
 
+
+# Claude image
 FROM base AS claude
 
 ARG AGENT_USER
 
+USER root
 RUN set -eux; \
       \
       curl -fsSL https://claude.ai/install.sh | bash; \
       install -m 0755 $HOME/.local/bin/claude /usr/local/bin/claude; \
-      claude --version;
+      /usr/local/bin/claude --version;
 
 USER ${AGENT_USER}
-CMD ["claude"]
+CMD ["/usr/local/bin/claude"]
 
 
+# Grok image
 FROM base AS grok
 
 ARG AGENT_USER
 
+USER root
 RUN set -eux; \
       \
       curl -fsSL https://x.ai/cli/install.sh | bash; \
       install -m 0755 $HOME/.grok/bin/grok /usr/local/bin/grok; \
-      grok --version;
+      /usr/local/bin/grok --version;
 
 USER ${AGENT_USER}
-CMD ["grok"]
+CMD ["/usr/local/bin/grok"]

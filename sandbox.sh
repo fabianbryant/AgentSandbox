@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage () {
+usage() {
     echo '(* TODO *)'
     exit 0
 }
 
-SUPPORTED_AGENTS=('claude' 'grok')
+SUPPORTED_AGENTS=('base' 'claude' 'grok')
 
 list_agents() {
     echo "${SUPPORTED_AGENTS[@]}"
@@ -15,20 +15,18 @@ list_agents() {
 
 agent_supported() {
     supported='false'
+
     for agent in "${SUPPORTED_AGENTS[@]}"; do
         if [[ $agent == $1 ]]; then
             supported='true'
             break
         fi
     done
-    echo $supported
+
+    echo "$supported"
 }
 
 # TODO: Add env var passthrough
-# TODO: Add/evaluate network restriction (block all + whitelist)
-# TODO: Add configurable mem/cpu/pids
-# TODO: Move to using Docker Compose
-# TODO: Create Kubernetes/Minikube manifest
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -66,12 +64,66 @@ while [[ $# -gt 0 ]]; do
             shift 1
             ;;
 
+        -U|--agent-user)
+            AGENT_USER="$2"
+            shift 2
+            ;;
+        --agent-user=*)
+            AGENT_USER="${1#*=}"
+            shift 1
+            ;;
+
+        -u|--uid)
+            AGENT_UID="$2"
+            shift 2
+            ;;
+        --uid=*)
+            AGENT_UID="${1#*=}"
+            shift 1
+            ;;
+
+        -g|--gid)
+            AGENT_GID="$2"
+            shift 2
+            ;;
+        --gid=*)
+            AGENT_GID="${1#*=}"
+            shift 1
+            ;;
+
         -i|--image)
             IMAGE_NAME="$2"
             shift 2
             ;;
         --image=*)
             IMAGE_NAME="${1#*=}"
+            shift 1
+            ;;
+
+        -c|--cpus)
+            CPUS="$2"
+            shift 2
+            ;;
+        --cpus=*)
+            CPUS="${1#*=}"
+            shift 1
+            ;;
+
+        -m|--memory)
+            MEMORY="$2"
+            shift 2
+            ;;
+        --memory=*)
+            MEMORY="${1#*=}"
+            shift 1
+            ;;
+
+        -p|--pids-limit)
+            PIDS_LIMIT="$2"
+            shift 2
+            ;;
+        --pids-limit=*)
+            PIDS_LIMIT="${1#*=}"
             shift 1
             ;;
 
@@ -102,21 +154,21 @@ while [[ $# -gt 0 ]]; do
             shift 1
             ;;
 
-        -H|--agent-home-mnt)
-            AH_MOUNT_DIR="$2"
+        -A|--dot-agent-mnt)
+            DOT_AGENT_MOUNT_DIR="$2"
             shift 2
             ;;
-        --agent-home-mnt=*)
-            AH_MOUNT_DIR="${1#*=}"
+        --dot-agent-mnt=*)
+            DOT_AGENT_MOUNT_DIR="${1#*=}"
             shift 1
             ;;
 
         -L|--dot-local-mnt)
-            DL_MOUNT_DIR="$2"
+            DOT_LOCAL_MOUNT_DIR="$2"
             shift 2
             ;;
         --dot-local-mnt=*)
-            DL_MOUNT_DIR="${1#*=}"
+            DOT_LOCAL_MOUNT_DIR="${1#*=}"
             shift 1
             ;;
 
@@ -139,7 +191,7 @@ while [[ $# -gt 0 ]]; do
             ;;
 
         --)
-            shift
+            shift 1
             break
             ;;
         -*)
@@ -153,7 +205,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-DEBUG=${DEBUG:-'false'}
+DEBUG=${DEBUG:='false'}
 if [[ $DEBUG == 'true' ]]; then
     set -x
 fi
@@ -163,22 +215,33 @@ BUILD=${BUILD:='false'}
 USE_CACHE=${USE_CACHE:='false'}
 
 AGENT=${AGENT:='grok'}
-IMAGE_NAME=${IMAGE_NAME:=$AGENT-sandbox}
+IMAGE_NAME=${IMAGE_NAME:="$AGENT-sandbox"}
+AGENT_USER=${AGENT_USER:='agent'}
+
 SHM_SIZE=${SHM_SIZE:='1g'}
 TMPFS_SIZE=${TMPFS_SIZE:='256m'}
 
-supported=$(agent_supported $AGENT)
+supported=$(agent_supported "$AGENT")
 if [[ $supported == 'false' ]]; then
     echo "Unsupported agent: $AGENT" >&2
     exit 1
 fi
 
 if [[ $BUILD == 'true' ]]; then
-    if [[ $USE_CACHE == 'true' ]]; then
-        docker build --target=$AGENT -t=$IMAGE_NAME .
-    else
-        docker build --no-cache --target=$AGENT -t=$IMAGE_NAME .
+    AGENT_UID=${AGENT_UID:=1000}
+    AGENT_GID=${AGENT_GID:=1000}
+
+    build_flags=(
+        --build-arg "AGENT_USER=${AGENT_USER}"
+        --build-arg "AGENT_UID=${AGENT_UID}"
+        --build-arg "AGENT_GID=${AGENT_GID}"
+    )
+
+    if [[ $USE_CACHE != 'true' ]]; then
+        build_flags+=(--no-cache)
     fi
+
+    docker build "${build_flags[@]}" --target="$AGENT" -t="$IMAGE_NAME" .
 fi
 
 if [[ $RUN == 'false' ]]; then
@@ -186,25 +249,48 @@ if [[ $RUN == 'false' ]]; then
     exit 0
 fi
 
-AGENTS_DIR=${AGENTS_DIR:="$PWD/agents"}
-AH_MOUNT_DIR=${AH_MOUNT_DIR:="$HOME/.${AGENT}"}
-DL_MOUNT_DIR=${DL_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/.local"}
-RO_MOUNT_DIR=${RO_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/share/ro"}
-RW_MOUNT_DIR=${RW_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/share/rw"}
+run_flags=(
+    --rm -it
+    --cap-drop ALL
+    --security-opt no-new-privileges:true
+)
 
-mkdir -p "${AH_MOUNT_DIR}" \
-    "${DL_MOUNT_DIR}" \
-    "${RO_MOUNT_DIR}" \
-    "${RW_MOUNT_DIR}"
+if [[ -v CPUS ]]; then
+    run_flags+=(--cpus "$CPUS")
+fi
+if [[ -v MEMORY ]]; then
+    run_flags+=(
+        --memory "$MEMORY"
+        --memory-swap "$MEMORY"
+    )
+fi
+if [[ -v PIDS_LIMIT ]]; then
+    run_flags+=(--pids-limit "$PIDS_LIMIT")
+fi
 
-exec docker run --rm -it \
-    --cap-drop ALL \
-    --security-opt no-new-privileges:true \
-    --shm-size "$SHM_SIZE" \
-    --tmpfs "/tmp:rw,noexec,nosuid,size=$TMPFS_SIZE" \
-    -v "${AH_MOUNT_DIR}:/home/agent/.${AGENT}" \
-    -v "${DL_MOUNT_DIR}:/home/agent/.local" \
-    -v "${RW_MOUNT_DIR}:/home/agent/share/rw" \
-    -v "${RO_MOUNT_DIR}:/home/agent/share/ro:ro" \
-    "$IMAGE_NAME" \
-    "$@"
+run_flags+=(
+    --shm-size "$SHM_SIZE"
+    --tmpfs "/tmp:rw,noexec,nosuid,size=$TMPFS_SIZE"
+)
+
+if [[ $AGENT != 'base' ]]; then
+    AGENTS_DIR=${AGENTS_DIR:="$PWD/agents"}
+    DOT_AGENT_MOUNT_DIR=${DOT_AGENT_MOUNT_DIR:="$HOME/.${AGENT}"}
+    DOT_LOCAL_MOUNT_DIR=${DOT_LOCAL_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/.local"}
+    RO_MOUNT_DIR=${RO_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/share/ro"}
+    RW_MOUNT_DIR=${RW_MOUNT_DIR:="${AGENTS_DIR}/${AGENT}/share/rw"}
+
+    mkdir -p "${DOT_AGENT_MOUNT_DIR}" \
+        "${DOT_LOCAL_MOUNT_DIR}" \
+        "${RO_MOUNT_DIR}" \
+        "${RW_MOUNT_DIR}"
+
+    run_flags+=(
+        -v "${DOT_AGENT_MOUNT_DIR}:/home/${AGENT_USER}/.${AGENT}"
+        -v "${DOT_LOCAL_MOUNT_DIR}:/home/${AGENT_USER}/.local"
+        -v "${RW_MOUNT_DIR}:/home/${AGENT_USER}/rw"
+        -v "${RO_MOUNT_DIR}:/home/${AGENT_USER}/ro:ro"
+    )
+fi
+
+exec docker run "${run_flags[@]}" "$IMAGE_NAME" "$@"
