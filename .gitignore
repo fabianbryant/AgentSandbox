@@ -1,2 +1,4 @@
 *
 !.gitignore
+!Dockerfile
+!entrypoint.sh
