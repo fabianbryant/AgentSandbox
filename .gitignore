@@ -2,3 +2,4 @@
 !.gitignore
 !Dockerfile
 !entrypoint.sh
+!sandbox.sh
