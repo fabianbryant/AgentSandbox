@@ -20,6 +20,34 @@ while [[ $# -gt 0 ]]; do
       NO_CACHE='true'
       shift
       ;;
+    -a|--agent)
+      AGENT=$2
+      shift 2
+      ;;
+    -U|--user)
+      AGENT_USER=$2
+      shift 2
+      ;;
+    -u|--uid)
+      AGENT_UID=$2
+      shift 2
+      ;;
+    -g|--gid)
+      AGENT_GID=$2
+      shift 2
+      ;;
+    -i|--image)
+      IMAGE_NAME=$2
+      shift 2
+      ;;
+    -n|--name)
+      CONTAINER_NAME=$2
+      shift 2
+      ;;
+    -H|--hostname)
+      CONTAINER_HOSTNAME=$2
+      shift 2
+      ;;
     --)
       shift
       break
@@ -45,10 +73,10 @@ BUILD=${BUILD:='false'}
 
 AGENT=${AGENT:='grok'}
 IMAGE_NAME=${IMAGE_NAME:=$AGENT-sandbox}
-AGENT_USER=${AGENT_USER:='agent'}
 
 if [[ $BUILD == 'true' ]]; then
   NO_CACHE=${NO_CACHE='false'}
+  AGENT_USER=${AGENT_USER:='agent'}
   AGENT_UID=${AGENT_UID:=1000}
   AGENT_GID=${AGENT_GID:=1000}
 
