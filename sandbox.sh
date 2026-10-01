@@ -1,15 +1,54 @@
 #!/usr/bin/env bash
-set -eux
+set -euo pipefail
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --debug)
+      DEBUG='true'
+      shift
+      ;;
+    --build)
+      BUILD='true'
+      shift
+      ;;
+    --build-only)
+      BUILD='true'
+      RUN='false'
+      shift
+      ;;
+    --no-cache)
+      NO_CACHE='true'
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "Invalid option: $1" >&2
+      exit 1
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+DEBUG=${DEBUG:='false'}
+
+if [[ $DEBUG == 'true' ]]; then
+  set -x
+fi
 
 RUN=${RUN:='true'}
 BUILD=${BUILD:='false'}
-USE_CACHE=${USE_CACHE='false'}
 
 AGENT=${AGENT:='grok'}
 IMAGE_NAME=${IMAGE_NAME:=$AGENT-sandbox}
 AGENT_USER=${AGENT_USER:='agent'}
 
 if [[ $BUILD == 'true' ]]; then
+  NO_CACHE=${NO_CACHE='false'}
   AGENT_UID=${AGENT_UID:=1000}
   AGENT_GID=${AGENT_GID:=1000}
 
@@ -19,7 +58,7 @@ if [[ $BUILD == 'true' ]]; then
     --build-arg AGENT_GID=${AGENT_GID}
   )
 
-  if [[ $USE_CACHE != 'true' ]]; then
+  if [[ $NO_CACHE == 'true' ]]; then
     build_flags+=(--no-cache)
   fi
 
