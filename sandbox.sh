@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+    echo "usage: $0 [options] -- [command ...]"
+    exit 0
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h|--help)
+      usage
+      ;;
     --debug)
       DEBUG='true'
       shift
