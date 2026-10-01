@@ -42,3 +42,35 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 USER ${AGENT_USER}
 CMD ["/bin/bash"]
+
+
+# Claude image
+FROM base AS claude
+
+ARG AGENT_USER
+
+# Install Claude coding agent
+USER root
+RUN set -eux; \
+    curl -fsSL https://claude.ai/install.sh | bash; \
+    install -m 0755 $HOME/.local/bin/claude /usr/local/bin/claude; \
+    claude --version
+
+USER ${AGENT_USER}
+CMD ["claude"]
+
+
+# Grok image
+FROM base AS grok
+
+ARG AGENT_USER
+
+# Install Grok coding agent
+USER root
+RUN set -eux; \
+    curl -fsSL https://x.ai/cli/install.sh | bash; \
+    install -m 0755 $HOME/.grok/bin/grok /usr/local/bin/grok; \
+    grok --version
+
+USER ${AGENT_USER}
+CMD ["grok"]
