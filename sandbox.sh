@@ -90,6 +90,14 @@ while [[ $# -gt 0 ]]; do
       MEMORY=$2
       shift 2
       ;;
+    -s|--shm-size)
+      SHM_SIZE=$2
+      shift 2
+      ;;
+    -t|--tmpfs-size)
+      TMPFS_SIZE=$2
+      shift 2
+      ;;
     -p|--pids-limit)
       PIDS_LIMIT=$2
       shift 2
@@ -194,6 +202,14 @@ if [[ $AUTO_MOUNTS == 'true' && $AGENT != 'base' ]]; then
     -v "${AGENT_RW_SOURCE}:/home/${AGENT_USER}/share/rw"
   )
 fi
+
+SHM_SIZE=${SHM_SIZE:='1g'}
+TMPFS_SIZE=${TMPFS_SIZE:='256m'}
+
+run_flags+=(
+  --shm-size $SHM_SIZE
+  --tmpfs /tmp:rw,noexec,nosuid,nodev,size=$TMPFS_SIZE
+)
 
 if [[ -v CPUS ]]; then
   run_flags+=(--cpus $CPUS)
