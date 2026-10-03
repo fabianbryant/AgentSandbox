@@ -142,83 +142,159 @@ while [[ $# -gt 0 ]]; do
     -l|--list-agents)
       list_agents
       ;;
+
     --debug)
       DEBUG='true'
       shift
       ;;
+
     --build)
       BUILD='true'
       shift
       ;;
+
     --build-only)
       BUILD='true'
       RUN='false'
       shift
       ;;
+
     --no-cache)
       NO_CACHE='true'
       shift
       ;;
+
     -a|--agent)
       AGENT=$2
       shift 2
       ;;
+    --agent=*)
+      AGENT="${1#*=}"
+      shift
+      ;;
+
     -U|--user)
       AGENT_USER=$2
       shift 2
       ;;
+    --user=*)
+      AGENT_USER="${1#*=}"
+      shift
+      ;;
+
     -u|--uid)
       AGENT_UID=$2
       shift 2
       ;;
+    --uid=*)
+      AGENT_UID="${1#*=}"
+      shift
+      ;;
+
     -g|--gid)
       AGENT_GID=$2
       shift 2
       ;;
+    --gid=*)
+      AGENT_GID="${1#*=}"
+      shift
+      ;;
+
     -i|--image)
       IMAGE_NAME=$2
       shift 2
       ;;
+    --image=*)
+      IMAGE_NAME="${1#*=}"
+      shift
+      ;;
+
     -n|--name)
       CONTAINER_NAME=$2
       shift 2
       ;;
+    --name=*)
+      CONTAINER_NAME="${1#*=}"
+      shift
+      ;;
+
     -H|--hostname)
       CONTAINER_HOSTNAME=$2
       shift 2
       ;;
+    --hostname=*)
+      CONTAINER_HOSTNAME="${1#*=}"
+      shift
+      ;;
+
     -c|--cpus)
       CPUS=$2
       shift 2
       ;;
+    --cpus=*)
+      CPUS="${1#*=}"
+      shift
+      ;;
+
     -m|--memory)
       MEMORY=$2
       shift 2
       ;;
+    --memory=*)
+      MEMORY="${1#*=}"
+      shift
+      ;;
+
     -s|--shm-size)
       SHM_SIZE=$2
       shift 2
       ;;
+    --shm-size=*)
+      SHM_SIZE="${1#*=}"
+      shift
+      ;;
+
     -t|--tmpfs-size)
       TMPFS_SIZE=$2
       shift 2
       ;;
+    --tmpfs-size=*)
+      TMPFS_SIZE="${1#*=}"
+      shift
+      ;;
+
     -p|--pids-limit)
       PIDS_LIMIT=$2
       shift 2
       ;;
+    --pids-limit=*)
+      PIDS_LIMIT="${1#*=}"
+      shift
+      ;;
+
     -e|--env)
       ENV_VARS+=("$2")
       shift 2
       ;;
+    --env=*)
+      ENV_VARS+=("$2")
+      shift
+      ;;
+
     -V|--volume)
       VOLUMES+=("$2")
       shift 2
       ;;
+    --volume=*)
+      VOLUMES+=("$2")
+      shift
+      ;;
+
     -N|--no-auto-mounts)
       AUTO_MOUNTS='false'
       shift
       ;;
+
     --)
       shift
       break
