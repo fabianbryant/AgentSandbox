@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SUPPORTED_AGENTS=('claude' 'grok')
+SUPPORTED_AGENTS=('base' 'claude' 'grok')
 ENV_VARS=()
 
 usage() {
@@ -81,6 +81,18 @@ while [[ $# -gt 0 ]]; do
       CONTAINER_HOSTNAME=$2
       shift 2
       ;;
+    -c|--cpus)
+      CPUS=$2
+      shift 2
+      ;;
+    -m|--memory)
+      MEMORY=$2
+      shift 2
+      ;;
+    -p|--pids-limit)
+      PIDS_LIMIT=$2
+      shift 2
+      ;;
     -e|--env)
       ENV_VARS+=("$2")
       shift 2
@@ -149,6 +161,21 @@ run_flags=(
   --cap-drop ALL
   --security-opt no-new-privileges:true
 )
+
+if [[ -v CPUS ]]; then
+  run_flags+=(--cpus $CPUS)
+fi
+
+if [[ -v MEMORY ]]; then
+  run_flags+=(
+    --memory $MEMORY
+    --memory-swap $MEMORY
+  )
+fi
+
+if [[ -v PIDS_LIMIT ]]; then
+  run_flags+=(--pids-limit $PIDS_LIMIT)
+fi
 
 for env_var in "${ENV_VARS[@]+"${ENV_VARS[@]}"}"; do
   run_flags+=(-e "$env_var")
