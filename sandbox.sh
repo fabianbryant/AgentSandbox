@@ -277,7 +277,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --env=*)
-      ENV_VARS+=("$2")
+      ENV_VARS+=("${1#*=}")
       shift
       ;;
 
@@ -286,7 +286,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --volume=*)
-      VOLUMES+=("$2")
+      VOLUMES+=("${1#*=}")
       shift
       ;;
 
