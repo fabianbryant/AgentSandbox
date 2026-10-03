@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+VERSION='0.1.0'
 SUPPORTED_AGENTS=('base' 'claude' 'grok')
 ENV_VARS=()
 VOLUMES=()
@@ -61,7 +62,7 @@ Usage: $0 [options] [--] [command ...]
          Cap on /dev/shm. Default: 1g
 
   -t, --tmpfs-size SIZE
-         Cap on the /tmp tmpfs (rw,noexec,nosuid,nodev). Default: 256m.
+         Cap on the /tmp tmpfs (rw,noexec,nosuid,nodev). Default: 256m
 
   -u, --uid USER_ID
          Sandbox user ID, baked into the image. Default: 1000
@@ -71,7 +72,10 @@ Usage: $0 [options] [--] [command ...]
          Sandbox user name, baked into the image. Default: agent
          Used only with --build or --build-only.
 
-  -v, --volume VOLUME
+  -v, --version
+         Show version info and exit.
+
+  -V, --volume VOLUME
          Specify a sandbox container volume. Repeatable. 
 
   --
@@ -103,8 +107,13 @@ EOF
   exit 0
 }
 
+version() {
+  echo "AgentSandbox $VERSION"
+  exit 0
+}
+
 list_agents() {
-  echo "supported agents: ${SUPPORTED_AGENTS[@]}"
+  echo "Supported agents: ${SUPPORTED_AGENTS[@]}"
   exit 0
 }
 
@@ -126,6 +135,9 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help)
       usage
+      ;;
+    -v|--version)
+      version
       ;;
     -l|--list-agents)
       list_agents
@@ -199,7 +211,7 @@ while [[ $# -gt 0 ]]; do
       ENV_VARS+=("$2")
       shift 2
       ;;
-    -v|--volume)
+    -V|--volume)
       VOLUMES+=("$2")
       shift 2
       ;;
