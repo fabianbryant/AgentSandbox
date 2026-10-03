@@ -6,7 +6,100 @@ ENV_VARS=()
 VOLUMES=()
 
 usage() {
-  echo "usage: $0 [options] [--] [command ...]"
+  cat <<EOF
+Usage: $0 [options] [--] [command ...]
+
+  --build
+         Build the sandbox image before running. Build target is set with --agent.
+         The default image tag can be overwritten with --image.
+
+  --build-only
+         Only build the sandbox image. Do not run a container.
+
+  --debug
+         Trace this script with set -x. Has no effect on the sandbox.
+
+  --no-cache
+         Disable build cache. Used only with --build or --build-only.
+
+  -a, --agent NAME
+         Stage to build when building. When running, sets image default: <agent>-sandbox
+         Use --list-agents to see a list of supported agent names.
+
+  -c, --cpus N
+         Sandbox container CPU limit.
+
+  -e, --env VAR[=VALUE]
+         Set sandbox container environment variables. Repeatable.
+
+  -g, --gid GROUP_ID
+         Sandbox user group ID. Default: 1000
+         Used only with --build or --build-only.
+
+  -h, --help
+         Show this help and exit.
+
+  -H, --hostname
+         Sandbox container hostname. Default: sandbox
+
+  -i, --image
+         Image tag to build or run. Default: <agent>-sandbox
+
+  -l, --list-agents
+         Print the supported agent names and exit.
+
+  -m, --memory SIZE
+         Sandbox container RAM limit.
+
+  -N, --no-auto-mounts
+         Disable automatic container volume setup.
+
+  -p, --pids-limit N
+         Maximum number of tasks for the sandbox container.
+
+  -s, --shm-size SIZE
+         Cap on /dev/shm. Default: 1g
+
+  -t, --tmpfs-size SIZE
+         Cap on the /tmp tmpfs (rw,noexec,nosuid,nodev). Default: 256m.
+
+  -u, --uid USER_ID
+         Sandbox user ID, baked into the image. Default: 1000
+         Used only with --build or --build-only.
+
+  -U, --user NAME
+         Sandbox user name, baked into the image. Default: agent
+         Used only with --build or --build-only.
+
+  -v, --volume VOLUME
+         Specify a sandbox container volume. Repeatable. 
+
+  --
+         End of options. Remaining arguments are the container command.
+         No remaining arguments runs the image's default command.
+
+Examples:
+  ./sandbox.sh --build
+
+  ./sandbox.sh --build-only
+
+  ./sandbox.sh --agent claude \
+    --build \
+    --no-cache \
+    --user claude \
+    --uid 501 \
+    --gid 20
+
+  ./sandbox.sh --agent claude --env ANTHROPIC_API_KEY
+
+  ./sandbox.sh -a grok -e XAI_API_KEY
+
+  ./sandbox.sh -a grok -- grok login --device-auth
+
+  ./sandbox.sh --agent base -e FOO=bar -e BAR=baz printenv
+
+  AGENT=claude ./sandbox.sh --cpus 4 --memory 4g --pids-limit 64
+EOF
   exit 0
 }
 
