@@ -102,6 +102,10 @@ while [[ $# -gt 0 ]]; do
       VOLUMES+=("$2")
       shift 2
       ;;
+    -N|--no-auto-mounts)
+      AUTO_MOUNTS='false'
+      shift
+      ;;
     --)
       shift
       break
@@ -127,6 +131,7 @@ BUILD=${BUILD:='false'}
 
 AGENT=${AGENT:='grok'}
 IMAGE_NAME=${IMAGE_NAME:=$AGENT-sandbox}
+AGENT_USER=${AGENT_USER:='agent'}
 
 if [[ $(agent_is_supported $AGENT) != 'true' ]]; then
   echo "Unsupported agent: $AGENT" >&2
@@ -135,7 +140,6 @@ fi
 
 if [[ $BUILD == 'true' ]]; then
   NO_CACHE=${NO_CACHE='false'}
-  AGENT_USER=${AGENT_USER:='agent'}
   AGENT_UID=${AGENT_UID:=1000}
   AGENT_GID=${AGENT_GID:=1000}
 
@@ -166,6 +170,30 @@ run_flags=(
   --cap-drop ALL
   --security-opt no-new-privileges:true
 )
+
+AUTO_MOUNTS=${AUTO_MOUNTS:='true'}
+
+if [[ $AUTO_MOUNTS == 'true' && $AGENT != 'base' ]]; then
+  AGENTS_DIR=${AGENTS_DIR:="$PWD/agents"}
+  AGENT_SHARE_DIR=${AGENT_SHARE_DIR:="${AGENTS_DIR}/${AGENT}/share"}
+
+  AGENT_CONFIG_SOURCE=${AGENT_CONFIG_SOURCE:="$HOME/.${AGENT}"}
+  AGENT_CACHE_SOURCE=${AGENT_CACHE_SOURCE:="${AGENTS_DIR}/${AGENT}/.local"}
+  AGENT_RO_SOURCE=${AGENT_RO_MOUNT_SOURCE:="${AGENT_SHARE_DIR}/ro"}
+  AGENT_RW_SOURCE=${AGENT_RW_MOUNT_SOURCE:="${AGENT_SHARE_DIR}/rw"}
+
+  mkdir -p "$AGENT_CONFIG_SOURCE" \
+    "$AGENT_CACHE_SOURCE" \
+    "$AGENT_RO_SOURCE" \
+    "$AGENT_RW_SOURCE"
+
+  run_flags+=(
+    -v "${AGENT_CONFIG_SOURCE}:/home/${AGENT_USER}/.${AGENT}"
+    -v "${AGENT_CACHE_SOURCE}:/home/${AGENT_USER}/.local"
+    -v "${AGENT_RO_SOURCE}:/home/${AGENT_USER}/share/ro:ro"
+    -v "${AGENT_RW_SOURCE}:/home/${AGENT_USER}/share/rw"
+  )
+fi
 
 if [[ -v CPUS ]]; then
   run_flags+=(--cpus $CPUS)
