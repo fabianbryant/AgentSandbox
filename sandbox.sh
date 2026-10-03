@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION='0.1.0'
 SUPPORTED_AGENTS=('base' 'claude' 'grok')
 ENV_VARS=()
 VOLUMES=()
@@ -108,6 +107,8 @@ EOF
 }
 
 version() {
+  script_dir=$(cd "$(dirname "$0")" && pwd)
+  VERSION=$(<"$script_dir/VERSION")
   echo "AgentSandbox $VERSION"
   exit 0
 }
