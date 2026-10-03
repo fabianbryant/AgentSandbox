@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SUPPORTED_AGENTS=('claude' 'grok')
+ENV_VARS=()
 
 usage() {
   echo "usage: $0 [options] [--] [command ...]"
@@ -80,6 +81,10 @@ while [[ $# -gt 0 ]]; do
       CONTAINER_HOSTNAME=$2
       shift 2
       ;;
+    -e|--env)
+      ENV_VARS+=("$2")
+      shift 2
+      ;;
     --)
       shift
       break
@@ -144,5 +149,9 @@ run_flags=(
   --cap-drop ALL
   --security-opt no-new-privileges:true
 )
+
+for env_var in "${ENV_VARS[@]+"${ENV_VARS[@]}"}"; do
+  run_flags+=(-e "$env_var")
+done
 
 exec docker run "${run_flags[@]}" $IMAGE_NAME "$@"
