@@ -1,15 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SUPPORTED_AGENTS=('claude' 'grok')
+
 usage() {
-    echo "usage: $0 [options] -- [command ...]"
-    exit 0
+  echo "usage: $0 [options] [--] [command ...]"
+  exit 0
+}
+
+list_agents() {
+  echo "supported agents: ${SUPPORTED_AGENTS[@]}"
+  exit 0
+}
+
+agent_is_supported() {
+  agent=$1
+  supported='false'
+
+  for supported_agent in "${SUPPORTED_AGENTS[@]}"; do
+    if [[ $agent == $supported_agent ]]; then
+      supported='true'
+      break
+    fi
+  done
+
+  echo $supported
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help)
       usage
+      ;;
+    -l|--list-agents)
+      list_agents
       ;;
     --debug)
       DEBUG='true'
@@ -81,6 +105,11 @@ BUILD=${BUILD:='false'}
 
 AGENT=${AGENT:='grok'}
 IMAGE_NAME=${IMAGE_NAME:=$AGENT-sandbox}
+
+if [[ $(agent_is_supported $AGENT) != 'true' ]]; then
+  echo "Unsupported agent: $AGENT" >&2
+  exit 1
+fi
 
 if [[ $BUILD == 'true' ]]; then
   NO_CACHE=${NO_CACHE='false'}
