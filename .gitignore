@@ -1,5 +1,6 @@
 *
 !.gitignore
+!README.md
 !Dockerfile
 !entrypoint.sh
 !sandbox.sh
