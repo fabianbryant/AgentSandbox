@@ -40,25 +40,25 @@ Config, cache, and share directories are created from the agent name, so each ag
 
 ## Usage
 
-## Build and run:
+### Build and run:
 
 ```bash
 ./sandbox.sh --agent=<agent> --build
 ```
 
-## Build only:
+### Build only:
 
 ```bash
 ./sandbox.sh --agent=<agent> --build-only
 ```
 
-## Run only:
+### Run only:
 
 ```bash
 ./sandbox.sh --agent=<agent>
 ```
 
-## Run commands
+### Run commands
 
 By default, running a container via `sandbox.sh` runs that image's `CMD`. `base` runs `bash`. An agent stage runs the command you set,
 usually its CLI. To override this, specify a command to run:
@@ -73,7 +73,7 @@ usually its CLI. To override this, specify a command to run:
 
 `--` ends options parsing.
 
-## Environment and volumes
+### Environment and volumes
 
 Typically, you will want to set an environment variable for AI agent authentication. A name alone forwards that variable from the host:
 
