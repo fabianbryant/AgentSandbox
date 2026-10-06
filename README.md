@@ -120,7 +120,7 @@ read-only `ro` direcotry and a read-write `rw` directory. Mounts pass with `-V` 
 
 ## Container defaults
 
-Every run uses `--rm` and `it`, drops all capabilities, and sets `no-new-privileges`. `/dev/shm` is capped with `--shm-size` (default `1g`). `/tmp` is a tmpfs mounted `rw,noexec,nosuid,nodev`, capped with `--tmpfs-size` (default `256m`). When `--memory` is set, swap is capped to that same size.
+Every run uses `--rm` and `-it`, drops all capabilities, and sets `no-new-privileges`. `/dev/shm` is capped with `--shm-size` (default `1g`). `/tmp` is a tmpfs mounted `rw,noexec,nosuid,nodev`, capped with `--tmpfs-size` (default `256m`). When `--memory` is set, swap is capped to that same size.
 
 ## Flags and Configuration
 
