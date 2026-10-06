@@ -58,7 +58,7 @@ Config, cache, and share directories are created from the agent name, so each ag
 ./sandbox.sh --agent=<agent>
 ```
 
-### Run commands
+## Run commands
 
 By default, running a container via `sandbox.sh` runs that image's `CMD`. `base` runs `bash`. An agent stage runs the command you set,
 usually its CLI. To override this, specify a command to run:
@@ -72,6 +72,8 @@ usually its CLI. To override this, specify a command to run:
 ```
 
 `--` ends options parsing.
+
+## Environment and volumes
 
 Typically, you will want to set an environment variable for AI agent authentication. A name alone forwards that variable from the host:
 
@@ -99,7 +101,7 @@ Arbitrary volume mounts can be specified similarly using `-V`/`--volume`:
 ## Auto Mounts
 
 Automatic mounts are enabled by default for every agent stage. `base` skips them. Turn them off with `-N`/`--no-auto-mounts` or
-`AUTO_MOUNTS='false'`.
+`NO_AUTO_MOUNTS='true'`.
 
 `sandbox.sh` creates each host directory when it is missing, then mounts it:
 
@@ -147,7 +149,7 @@ Note: Flags override environment variables.
 | TMPFS_SIZE          | -t, --tmpfs-size      | 256m                         |       | x   | cap on /tmp tmpfs             |
 | -                   | -e, --env             | -                            |       | x   | environment variable          |
 | -                   | -V, --volume          | -                            |       | x   | volume mount                  |
-| AUTO_MOUNTS         | -N, --no-auto-mounts  | 'true'                       |       | x   | automount volumes             |
+| NO_AUTO_MOUNTS      | -N, --no-auto-mounts  | 'false'                      |       | x   | disable automounted volumes   |
 | AGENTS_DIR          | -                     | $PWD/agents                  |       | x   | agents data parent dir        |
 | AGENT_SHARE_DIR     | -                     | \<agents-dir>/\<agent>/share |       | x   | agent share parent dir        |
 | AGENT_CONFIG_SOURCE | -                     | $HOME/.\<agent>              |       | x   | src dir for config volume     |

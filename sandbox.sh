@@ -292,7 +292,7 @@ while [[ $# -gt 0 ]]; do
       ;;
 
     -N|--no-auto-mounts)
-      AUTO_MOUNTS='false'
+      NO_AUTO_MOUNTS='true'
       shift
       ;;
 
@@ -361,9 +361,9 @@ run_flags=(
   --security-opt no-new-privileges:true
 )
 
-AUTO_MOUNTS=${AUTO_MOUNTS:='true'}
+NO_AUTO_MOUNTS=${NO_AUTO_MOUNTS:='false'}
 
-if [[ $AUTO_MOUNTS == 'true' && $AGENT != 'base' ]]; then
+if [[ $NO_AUTO_MOUNTS != 'true' && $AGENT != 'base' ]]; then
   AGENTS_DIR=${AGENTS_DIR:="$PWD/agents"}
   AGENT_SHARE_DIR=${AGENT_SHARE_DIR:="${AGENTS_DIR}/${AGENT}/share"}
 
