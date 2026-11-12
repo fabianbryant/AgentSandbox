@@ -329,7 +329,7 @@ if [[ $(agent_is_supported $AGENT) != 'true' ]]; then
 fi
 
 if [[ $BUILD == 'true' ]]; then
-  NO_CACHE=${NO_CACHE='false'}
+  NO_CACHE=${NO_CACHE:='false'}
   AGENT_UID=${AGENT_UID:=1000}
   AGENT_GID=${AGENT_GID:=1000}
 
